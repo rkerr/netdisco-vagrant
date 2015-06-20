@@ -1,0 +1,64 @@
+---
+- hosts: all
+  sudo: yes
+  
+  tasks:
+  - name: apt-get update
+    apt: update_cache=yes
+  - name: ensure required packages are installed
+    apt: name={{item}}
+    with_items:
+      - postgresql
+      - libdbd-pg-perl
+      - libsnmp-perl
+      - build-essential
+      - python-psycopg2
+      - cpanminus
+  - name: add netdisco user
+    user: name=netdisco
+
+- hosts: all
+  sudo: yes
+  sudo_user: postgres
+  gather_facts: no
+
+  vars:
+    dbname: netdisco
+    dbuser: netdisco
+    dbpassword: netdisco
+
+  tasks:
+  - name: ensure database is created
+    postgresql_db: name={{dbname}}
+
+  - name: ensure user has access to database
+    postgresql_user: db={{dbname}} name={{dbuser}} password={{dbpassword}} priv=ALL
+
+  - name: ensure user does not have unnecessary privilege
+    postgresql_user: name={{dbuser}} role_attr_flags=NOSUPERUSER,NOCREATEDB
+
+- hosts: all
+  sudo: yes
+  sudo_user: netdisco
+
+  tasks:
+  - name: ensure netdisco is installed and up to date
+    cpanm: locallib=~/perl5 notest=yes name=App::Netdisco
+  - name: ensure bin dir exists
+    file: path=~/bin/ state=directory mode=0755
+  - name: update binary symlinks
+    shell: find /home/netdisco/perl5/bin -name "netdisco-*" -exec ln -s {} ~netdisco/bin/ \;
+  - name: ensure environments dir exists
+    file: path=~/environments/ state=directory mode=0755
+  - name: link deployment.yml
+    file: src=/vagrant/deployment.yml dest=~/environments/deployment.yml state=link
+  - name: fix up deploy script
+    replace: dest=~/perl5/bin/netdisco-deploy regexp="{{item.regex}}" replace="{{item.replace}}"
+    with_items:
+      - { regex: "ReadLine->new[(]'netdisco'[)]", replace: "ReadLine->new('netdisco',\\*STDIN,\\*STDOUT)" }
+      - { regex: " my [$]name", replace: " #my $name"  }
+      - { regex: " my [$]pass = [$]term", replace: " #my $pass = $term" }
+      - { regex: " => [$]name,", replace: " => 'netdisco'," }
+      - { regex: "_make_password[(][$]pass[)]", replace: "_make_password('netdisco')" }
+  - name: run netdisco-deploy
+    shell: yes | ~/bin/netdisco-deploy

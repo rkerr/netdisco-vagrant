@@ -1,0 +1,10 @@
+---
+- hosts: all
+  sudo: yes
+  sudo_user: netdisco
+  
+  tasks:
+  - name: start netdisco-web
+    shell: ~/bin/netdisco-web start
+  - name: start netdisco-daemon
+    shell: ~/bin/netdisco-daemon start
