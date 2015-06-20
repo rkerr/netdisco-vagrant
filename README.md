@@ -19,7 +19,7 @@ If you're not a fan of ASCII art cows you may want to `export ANSIBLE_NOCOWS=1` 
 
 The first run will take some time to download and install all the dependencies, subsequent runs should be quicker.
 
-Once `vagrant up` Vagrant box will now be running Netdisco, with the web interface mapped through to localhost:5000.
+Once `vagrant up` has completed the Vagrant box will now be running Netdisco, with the web interface mapped through to localhost:5000.
 
 The default web interface user/password is: `netdisco/netdisco`
 
