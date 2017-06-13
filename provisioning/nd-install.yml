@@ -29,6 +29,8 @@
       - libtemplate-perl
       - libsereal-encoder-perl
       - libsereal-decoder-perl
+      - acl
+      - libcrypt-ssleay-perl
   - name: add netdisco user
     user: name=netdisco
 
